@@ -58,14 +58,14 @@ function annihilateShorts() {
             return;
         }
         
-        const titleElement = shelf.querySelector('#title, .title, #title-text, yt-formatted-string.ytd-shelf-renderer');
+        const titleElement = shelf.querySelector('#title, .title, #title-text, yt-formatted-string.ytd-shelf-renderer, yt-formatted-string[id="title"]');
         const titleText = titleElement ? (titleElement.textContent || '').trim().toLowerCase() : '';
         const isShortsShelf = 
             shelf.querySelector('ytd-rich-shelf-renderer[is-shorts]') ||
             shelf.querySelector('yt-icon[icon="yt-icons:shorts_logo"]') ||
             shelf.querySelector('svg path[d^="M10 14.65v-5.3L15 12l-5 2.65zm7.77-4.33"]') || 
-            titleText === 'shorts' || 
-            titleText === 'ショート';
+            titleText.includes('shorts') || 
+            titleText.includes('ショート');
 
         if (isShortsShelf) {
             shelf.remove();
@@ -73,15 +73,15 @@ function annihilateShorts() {
     });
 
     // 2.3 Destroy Sidebar Links and Channel Tabs
-    const uiElements = document.querySelectorAll('ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-tab, yt-tab-shape');
+    const uiElements = document.querySelectorAll('ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-tab, yt-tab-shape, [role="tab"]');
     uiElements.forEach(el => {
         const titleAttr = el.getAttribute('aria-label') || '';
         const linkTitle = el.querySelector('a')?.getAttribute('title') || '';
-        const text = (el.textContent || '').trim();
+        const text = (el.textContent || '').trim().toLowerCase();
         
-        if (titleAttr.includes('Shorts') || titleAttr.includes('ショート') ||
-            linkTitle.includes('Shorts') || linkTitle.includes('ショート') ||
-            text === 'Shorts' || text === 'ショート') {
+        if (titleAttr.includes('shorts') || titleAttr.includes('ショート') ||
+            linkTitle.includes('shorts') || linkTitle.includes('ショート') ||
+            text.includes('shorts') || text.includes('ショート')) {
             el.remove();
         }
     });
