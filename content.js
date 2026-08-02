@@ -53,10 +53,10 @@ function removeShorts() {
     });
 
     // 5. Hide channel page Shorts tab
-    const tabs = document.querySelectorAll('tp-yt-paper-tab');
+    const tabs = document.querySelectorAll('tp-yt-paper-tab, yt-tab-shape');
     tabs.forEach(tab => {
-        const text = tab.textContent.trim();
-        if (text === 'Shorts' || text === 'ショート') {
+        const text = tab.textContent || '';
+        if (text.includes('Shorts') || text.includes('ショート')) {
             tab.style.display = 'none';
         }
     });
