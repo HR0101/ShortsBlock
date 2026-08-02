@@ -1,40 +1,73 @@
-// content.js - EXTREME EDITION
+// content.js
 
-// 1. Hardcore Redirect & SPA Navigation Intercept
-function enforceRedirect(url) {
-    if (url.includes('/shorts/')) {
-        // Nuke the body immediately to prevent visual flash of the Shorts player
-        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#000;color:#fff;font-size:24px;font-family:sans-serif;">Shorts are blocked. Redirecting...</div>';
-        
-        // Extract video ID and redirect to normal player
-        const videoId = url.split('/shorts/')[1]?.split(/[?#]/)[0];
-        if (videoId) {
-            window.location.replace(`https://www.youtube.com/watch?v=${videoId}`);
-        } else {
-            window.location.replace('https://www.youtube.com/');
-        }
-        return true;
+const CHANNEL_SHORTS_PATH = /^\/(?:@[^/]+|channel\/[^/]+|c\/[^/]+|user\/[^/]+)\/shorts\/?$/i;
+const SHORTS_VIDEO_PATH = /^\/shorts\/([A-Za-z0-9_-]+)\/?$/;
+
+function getRedirectTarget(rawUrl) {
+    let url;
+
+    try {
+        url = new URL(rawUrl, window.location.origin);
+    } catch {
+        return null;
     }
-    return false;
+
+    const videoMatch = url.pathname.match(SHORTS_VIDEO_PATH);
+    if (videoMatch) {
+        const watchUrl = new URL('/watch', url.origin);
+        watchUrl.searchParams.set('v', videoMatch[1]);
+        return watchUrl.href;
+    }
+
+    // A hidden tab can still be reached from history, bookmarks, or an external
+    // link. Send channel Shorts pages to the normal Videos tab instead.
+    if (CHANNEL_SHORTS_PATH.test(url.pathname)) {
+        url.pathname = url.pathname.replace(/\/shorts\/?$/i, '/videos');
+        url.search = '';
+        url.hash = '';
+        return url.href;
+    }
+
+    return null;
 }
 
-// Check on initial load
+function enforceRedirect(rawUrl) {
+    const target = getRedirectTarget(rawUrl);
+    if (!target) {
+        return false;
+    }
+
+    // document_start may run before <body> exists.
+    if (document.body) {
+        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#000;color:#fff;font-size:24px;font-family:sans-serif;">Shorts are blocked. Redirecting...</div>';
+    }
+
+    window.location.replace(target);
+    return true;
+}
+
 enforceRedirect(window.location.href);
 
-// Listen to YouTube's internal SPA navigation events to catch routing instantly
-document.addEventListener('yt-navigate-start', (e) => {
-    const url = e.detail?.url || e.detail?.endpoint?.urlEndpoint?.url || window.location.href;
+// Listen to YouTube's SPA navigation before the destination is painted.
+document.addEventListener('yt-navigate-start', (event) => {
+    const url = event.detail?.url || event.detail?.endpoint?.urlEndpoint?.url || window.location.href;
     enforceRedirect(url);
 });
 
-// Also fallback to standard popstate
 window.addEventListener('popstate', () => {
     enforceRedirect(window.location.href);
 });
 
-// 2. Aggressive DOM Annihilation Function
 function annihilateShorts() {
-    // 2.1 Find ANY link pointing to a Short and hide its container permanently
+    // Channel Shorts pages use a dedicated grid. Hiding the grid also removes
+    // its sort chips and loading placeholders, not just the individual cards.
+    document.querySelectorAll(
+        'ytd-rich-grid-renderer[is-shorts-grid], ytd-rich-item-renderer[is-shorts-grid]'
+    ).forEach(grid => {
+        grid.style.setProperty('display', 'none', 'important');
+    });
+
+    // Find links pointing to a Short and hide their outer renderer.
     const shortLinks = document.querySelectorAll('a[href*="/shorts/"]');
     shortLinks.forEach(link => {
         const container = link.closest(
@@ -49,7 +82,7 @@ function annihilateShorts() {
         }
     });
 
-    // 2.2 Destroy Shorts Shelves entirely (By Title/Icon)
+    // Hide Shorts shelves entirely (by renderer, title, or icon).
     const shelves = document.querySelectorAll('ytd-rich-section-renderer, ytd-reel-shelf-renderer, ytd-shelf-renderer, ytd-item-section-renderer');
     shelves.forEach(shelf => {
         if (shelf.tagName.toLowerCase() === 'ytd-reel-shelf-renderer') {
@@ -71,13 +104,14 @@ function annihilateShorts() {
         }
     });
 
-    // 2.3 Cleanup Empty Containers (The Ultimate Fix for Leftover Headers)
-    // If we hid all the videos in a row or shelf, hide the row/shelf itself so the title disappears!
-    const containers = document.querySelectorAll('ytd-rich-section-renderer, ytd-shelf-renderer, ytd-item-section-renderer, ytd-rich-grid-row, ytd-horizontal-card-list-renderer');
+    // Hide empty rows/shelves so their title does not remain behind.
+    const containers = document.querySelectorAll(
+        'ytd-rich-section-renderer, ytd-shelf-renderer, ytd-item-section-renderer, ' +
+        'ytd-rich-grid-row, ytd-horizontal-card-list-renderer'
+    );
     containers.forEach(container => {
         const items = Array.from(container.querySelectorAll('ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, ytm-shorts-lockup-view-model-v2, ytm-shorts-lockup-view-model'));
         if (items.length > 0) {
-            // Check if every single item in this container has been hidden by us
             const allHidden = items.every(item => item.style.display === 'none');
             if (allHidden) {
                 container.style.setProperty('display', 'none', 'important');
@@ -85,17 +119,20 @@ function annihilateShorts() {
         }
     });
 
-    // 2.4 Destroy Sidebar Links and Channel Tabs
+    // Hide sidebar entries and channel tabs in every supported language. The
+    // href check also works if YouTube has not rendered the visible text yet.
     const uiElements = document.querySelectorAll('ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-tab, yt-tab-shape, [role="tab"]');
     uiElements.forEach(el => {
-        const titleAttr = el.getAttribute('aria-label') || '';
-        const linkTitle = el.querySelector('a')?.getAttribute('title') || '';
-        const tabTitleAttr = el.getAttribute('tab-title') || '';
+        const titleAttr = (el.getAttribute('aria-label') || '').toLowerCase();
+        const linkTitle = (el.querySelector('a')?.getAttribute('title') || '').toLowerCase();
+        const tabTitleAttr = (el.getAttribute('tab-title') || '').toLowerCase();
+        const href = (el.querySelector('a')?.getAttribute('href') || '').toLowerCase();
         const text = (el.textContent || '').trim().toLowerCase();
         
         if (titleAttr.includes('shorts') || titleAttr.includes('ショート') ||
             linkTitle.includes('shorts') || linkTitle.includes('ショート') ||
             tabTitleAttr.includes('shorts') || tabTitleAttr.includes('ショート') ||
+            /\/(?:shorts)(?:[/?#]|$)/.test(href) ||
             text.includes('shorts') || text.includes('ショート')) {
             el.style.setProperty('display', 'none', 'important');
             el.style.setProperty('width', '0', 'important');
@@ -105,7 +142,7 @@ function annihilateShorts() {
         }
     });
 
-    // 2.5 Destroy SVG icons that look like shorts (and their containers)
+    // Hide legacy Shorts icons and their outer renderer.
     const shortIcons = document.querySelectorAll('svg path[d^="M10 14.65v-5.3L15 12l-5 2.65zm7.77-4.33"]');
     shortIcons.forEach(path => {
         const svg = path.closest('svg');
@@ -116,16 +153,12 @@ function annihilateShorts() {
     });
 }
 
-// Run immediately
 annihilateShorts();
 
-// 3. Extreme MutationObserver: Checks DOM changes using requestAnimationFrame for zero-lag obliteration
 let isAnnihilating = false;
 const observer = new MutationObserver(() => {
     if (!isAnnihilating) {
         isAnnihilating = true;
-        // requestAnimationFrame ensures this runs right before the browser paints the screen,
-        // so the user NEVER sees the Shorts elements even for a millisecond.
         requestAnimationFrame(() => {
             annihilateShorts();
             isAnnihilating = false;
@@ -133,5 +166,21 @@ const observer = new MutationObserver(() => {
     }
 });
 
-// Observe EVERYTHING
-observer.observe(document.body, { childList: true, subtree: true });
+function startObserver() {
+    const root = document.body || document.documentElement;
+    if (!root) {
+        return false;
+    }
+
+    observer.observe(root, { childList: true, subtree: true });
+    return true;
+}
+
+// At document_start the body often does not exist yet. Observing <html> catches
+// its insertion; the DOMContentLoaded fallback covers unusually early injection.
+if (!startObserver()) {
+    document.addEventListener('DOMContentLoaded', () => {
+        annihilateShorts();
+        startObserver();
+    }, { once: true });
+}

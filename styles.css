@@ -4,6 +4,12 @@ ytd-reel-shelf-renderer {
     display: none !important;
 }
 
+/* Hide the complete Shorts grid on a channel page, including sort chips. */
+ytd-rich-grid-renderer[is-shorts-grid],
+ytd-rich-item-renderer[is-shorts-grid] {
+    display: none !important;
+}
+
 /* Hide Shorts link in sidebar */
 ytd-guide-entry-renderer:has(a[title="Shorts"]),
 ytd-guide-entry-renderer:has(a[title="ショート"]),
@@ -29,9 +35,11 @@ a[href*="/shorts/"] {
 
 /* Hide channel page Shorts tab using CSS attributes */
 yt-tab-shape[tab-title*="ショート"],
-yt-tab-shape[tab-title*="Shorts"],
-tp-yt-paper-tab:has(.tab-title:contains("ショート")),
-tp-yt-paper-tab:has(.tab-title:contains("Shorts")) {
+yt-tab-shape[tab-title*="Shorts" i],
+yt-tab-shape:has(a[href$="/shorts"]),
+tp-yt-paper-tab[aria-label*="ショート"],
+tp-yt-paper-tab[aria-label*="Shorts" i],
+tp-yt-paper-tab:has(a[href$="/shorts"]) {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
