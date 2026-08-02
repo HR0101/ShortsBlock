@@ -1,0 +1,28 @@
+/* Hide Shorts shelf (Home, Subscriptions) */
+ytd-rich-shelf-renderer[is-shorts],
+ytd-reel-shelf-renderer {
+    display: none !important;
+}
+
+/* Hide Shorts link in sidebar */
+ytd-guide-entry-renderer:has(a[title="Shorts"]),
+ytd-guide-entry-renderer:has(a[title="ショート"]),
+ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+ytd-mini-guide-entry-renderer[aria-label="ショート"] {
+    display: none !important;
+}
+
+/* Hide videos that link to Shorts (modern browsers with :has support) */
+ytd-rich-item-renderer:has(a[href*="/shorts/"]),
+ytd-video-renderer:has(a[href*="/shorts/"]),
+ytd-grid-video-renderer:has(a[href*="/shorts/"]),
+ytd-compact-video-renderer:has(a[href*="/shorts/"]),
+ytm-shorts-lockup-view-model-v2,
+ytm-shorts-lockup-view-model {
+    display: none !important;
+}
+
+/* Hide any direct shorts link */
+a[href*="/shorts/"] {
+    display: none !important;
+}
