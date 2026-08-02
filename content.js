@@ -12,16 +12,26 @@ function removeShorts() {
         return;
     }
 
-    // 2. Hide Shorts shelves (Home page, Subscriptions, etc.)
-    const shelves = document.querySelectorAll('ytd-rich-section-renderer, ytd-reel-shelf-renderer');
+    // 2. Hide Shorts shelves (Home page, Subscriptions, Search results, etc.)
+    const shelves = document.querySelectorAll('ytd-rich-section-renderer, ytd-reel-shelf-renderer, ytd-shelf-renderer, ytd-item-section-renderer');
     shelves.forEach(shelf => {
-        const text = shelf.innerText || '';
-        // If the shelf contains the Shorts icon or the text "Shorts"/"ショート", hide it
-        if (
+        // Unconditionally hide reel shelves (which are almost exclusively for Shorts)
+        if (shelf.tagName.toLowerCase() === 'ytd-reel-shelf-renderer') {
+            shelf.style.display = 'none';
+            return;
+        }
+        
+        // For other shelves, check if the title or icon indicates it's a Shorts shelf
+        const titleElement = shelf.querySelector('#title, .title, #title-text, yt-formatted-string.ytd-shelf-renderer');
+        const text = titleElement ? (titleElement.textContent || '').trim() : '';
+        const isShortsShelf = 
             shelf.querySelector('ytd-rich-shelf-renderer[is-shorts]') ||
-            text.includes('Shorts') || 
-            text.includes('ショート')
-        ) {
+            shelf.querySelector('yt-icon[icon="yt-icons:shorts_logo"]') ||
+            shelf.querySelector('svg path[d^="M10 14.65v-5.3L15 12l-5 2.65zm7.77-4.33"]') || // Shorts SVG icon path
+            text === 'Shorts' || 
+            text === 'ショート';
+
+        if (isShortsShelf) {
             shelf.style.display = 'none';
         }
     });
@@ -44,7 +54,7 @@ function removeShorts() {
     // 4. Hide individual Shorts videos (grids, recommendations)
     const shortLinks = document.querySelectorAll('a[href*="/shorts/"]');
     shortLinks.forEach(link => {
-        const container = link.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, ytm-shorts-lockup-view-model-v2, ytm-shorts-lockup-view-model');
+        const container = link.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, ytm-shorts-lockup-view-model-v2, ytm-shorts-lockup-view-model, ytd-search-pyv-renderer');
         if (container) {
             container.style.display = 'none';
         } else {
