@@ -22,7 +22,26 @@ ytm-shorts-lockup-view-model {
     display: none !important;
 }
 
-/* Hide any direct shorts link */
+/* Hide individual Shorts links in grids */
 a[href*="/shorts/"] {
+    display: none !important;
+}
+
+/* Hide channel page Shorts tab using CSS attributes */
+yt-tab-shape[tab-title*="ショート"],
+yt-tab-shape[tab-title*="Shorts"],
+tp-yt-paper-tab:has(.tab-title:contains("ショート")),
+tp-yt-paper-tab:has(.tab-title:contains("Shorts")) {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Hide sidebar links to Shorts (using modern :has selector) */
+ytd-guide-entry-renderer:has(a[title*="ショート"]),
+ytd-guide-entry-renderer:has(a[title*="Shorts"]),
+ytd-mini-guide-entry-renderer:has(a[title*="ショート"]),
+ytd-mini-guide-entry-renderer:has(a[title*="Shorts"]) {
     display: none !important;
 }

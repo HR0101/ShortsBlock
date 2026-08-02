@@ -44,9 +44,9 @@ function annihilateShorts() {
             'ytm-shorts-lockup-view-model, ytd-search-pyv-renderer, ytd-shelf-renderer'
         );
         if (container) {
-            container.remove(); // Permanent removal from DOM (not just display:none)
+            container.style.setProperty('display', 'none', 'important');
         } else {
-            link.remove();
+            link.style.setProperty('display', 'none', 'important');
         }
     });
 
@@ -54,7 +54,7 @@ function annihilateShorts() {
     const shelves = document.querySelectorAll('ytd-rich-section-renderer, ytd-reel-shelf-renderer, ytd-shelf-renderer, ytd-item-section-renderer');
     shelves.forEach(shelf => {
         if (shelf.tagName.toLowerCase() === 'ytd-reel-shelf-renderer') {
-            shelf.remove();
+            shelf.style.setProperty('display', 'none', 'important');
             return;
         }
         
@@ -68,7 +68,7 @@ function annihilateShorts() {
             titleText.includes('ショート');
 
         if (isShortsShelf) {
-            shelf.remove();
+            shelf.style.setProperty('display', 'none', 'important');
         }
     });
 
@@ -77,12 +77,17 @@ function annihilateShorts() {
     uiElements.forEach(el => {
         const titleAttr = el.getAttribute('aria-label') || '';
         const linkTitle = el.querySelector('a')?.getAttribute('title') || '';
+        // Also check custom attribute tab-title
+        const tabTitleAttr = el.getAttribute('tab-title') || '';
         const text = (el.textContent || '').trim().toLowerCase();
         
         if (titleAttr.includes('shorts') || titleAttr.includes('ショート') ||
             linkTitle.includes('shorts') || linkTitle.includes('ショート') ||
+            tabTitleAttr.includes('shorts') || tabTitleAttr.includes('ショート') ||
             text.includes('shorts') || text.includes('ショート')) {
-            el.remove();
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('width', '0', 'important');
+            el.style.setProperty('height', '0', 'important');
         }
     });
 }
