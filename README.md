@@ -3,7 +3,8 @@
 パソコンでもYoutubeShortsを見てしまう人用
 
 ## 概要
-YouTubeのウェブ版（PCブラウザ版）から「ショート動画（YouTube Shorts）」を完全に非表示にするためのブラウザ拡張機能（Google Chrome / Microsoft Edge対応）です。
+YouTubeのウェブ版（PCブラウザ版）から「ショート動画（YouTube Shorts）」を完全に非表示にするためのブラウザ拡張機能です。
+Google Chrome、Microsoft Edge、Brave、Vivaldi、Operaなどの**Chromium系ブラウザ**で動作します。
 ショート動画の棚、サイドバーのリンク、関連動画からの導線などをすべてブロックします。
 
 ## 機能
