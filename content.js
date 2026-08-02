@@ -34,10 +34,9 @@ window.addEventListener('popstate', () => {
 
 // 2. Aggressive DOM Annihilation Function
 function annihilateShorts() {
-    // 2.1 Find ANY link pointing to a Short and DESTROY its container permanently
+    // 2.1 Find ANY link pointing to a Short and hide its container permanently
     const shortLinks = document.querySelectorAll('a[href*="/shorts/"]');
     shortLinks.forEach(link => {
-        // Find the outermost YouTube renderer element to completely wipe it out
         const container = link.closest(
             'ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ' +
             'ytd-compact-video-renderer, ytd-reel-item-renderer, ytm-shorts-lockup-view-model-v2, ' +
@@ -50,7 +49,7 @@ function annihilateShorts() {
         }
     });
 
-    // 2.2 Destroy Shorts Shelves entirely
+    // 2.2 Destroy Shorts Shelves entirely (By Title/Icon)
     const shelves = document.querySelectorAll('ytd-rich-section-renderer, ytd-reel-shelf-renderer, ytd-shelf-renderer, ytd-item-section-renderer');
     shelves.forEach(shelf => {
         if (shelf.tagName.toLowerCase() === 'ytd-reel-shelf-renderer') {
@@ -72,12 +71,25 @@ function annihilateShorts() {
         }
     });
 
-    // 2.3 Destroy Sidebar Links and Channel Tabs
+    // 2.3 Cleanup Empty Containers (The Ultimate Fix for Leftover Headers)
+    // If we hid all the videos in a row or shelf, hide the row/shelf itself so the title disappears!
+    const containers = document.querySelectorAll('ytd-rich-section-renderer, ytd-shelf-renderer, ytd-item-section-renderer, ytd-rich-grid-row, ytd-horizontal-card-list-renderer');
+    containers.forEach(container => {
+        const items = Array.from(container.querySelectorAll('ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, ytm-shorts-lockup-view-model-v2, ytm-shorts-lockup-view-model'));
+        if (items.length > 0) {
+            // Check if every single item in this container has been hidden by us
+            const allHidden = items.every(item => item.style.display === 'none');
+            if (allHidden) {
+                container.style.setProperty('display', 'none', 'important');
+            }
+        }
+    });
+
+    // 2.4 Destroy Sidebar Links and Channel Tabs
     const uiElements = document.querySelectorAll('ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-tab, yt-tab-shape, [role="tab"]');
     uiElements.forEach(el => {
         const titleAttr = el.getAttribute('aria-label') || '';
         const linkTitle = el.querySelector('a')?.getAttribute('title') || '';
-        // Also check custom attribute tab-title
         const tabTitleAttr = el.getAttribute('tab-title') || '';
         const text = (el.textContent || '').trim().toLowerCase();
         
@@ -88,6 +100,18 @@ function annihilateShorts() {
             el.style.setProperty('display', 'none', 'important');
             el.style.setProperty('width', '0', 'important');
             el.style.setProperty('height', '0', 'important');
+            el.style.setProperty('padding', '0', 'important');
+            el.style.setProperty('margin', '0', 'important');
+        }
+    });
+
+    // 2.5 Destroy SVG icons that look like shorts (and their containers)
+    const shortIcons = document.querySelectorAll('svg path[d^="M10 14.65v-5.3L15 12l-5 2.65zm7.77-4.33"]');
+    shortIcons.forEach(path => {
+        const svg = path.closest('svg');
+        const container = svg?.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-reel-item-renderer, ytd-guide-entry-renderer, yt-tab-shape');
+        if (container) {
+            container.style.setProperty('display', 'none', 'important');
         }
     });
 }
