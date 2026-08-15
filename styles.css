@@ -1,16 +1,17 @@
-/* Hide Shorts shelf (Home, Subscriptions) */
+/* ホーム・登録チャンネルのショート棚を非表示にする */
 ytd-rich-shelf-renderer[is-shorts],
+ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
 ytd-reel-shelf-renderer {
     display: none !important;
 }
 
-/* Hide the complete Shorts grid on a channel page, including sort chips. */
+/* チャンネルページのショートグリッドを, 並び替えチップごと非表示にする */
 ytd-rich-grid-renderer[is-shorts-grid],
 ytd-rich-item-renderer[is-shorts-grid] {
     display: none !important;
 }
 
-/* Hide Shorts link in sidebar */
+/* サイドバーのショートリンクを非表示にする */
 ytd-guide-entry-renderer:has(a[title="Shorts"]),
 ytd-guide-entry-renderer:has(a[title="ショート"]),
 ytd-mini-guide-entry-renderer[aria-label="Shorts"],
@@ -18,22 +19,27 @@ ytd-mini-guide-entry-renderer[aria-label="ショート"] {
     display: none !important;
 }
 
-/* Hide videos that link to Shorts (modern browsers with :has support) */
+/* ショートへリンクしているカードだけを, カード単位で非表示にする.
+   関連動画欄（ytd-item-section-renderer）などの入れ物はここで消さない.
+   ショートと横動画が同じ入れ物に並ぶため, 入れ物を消すと横動画も消える. */
 ytd-rich-item-renderer:has(a[href*="/shorts/"]),
 ytd-video-renderer:has(a[href*="/shorts/"]),
 ytd-grid-video-renderer:has(a[href*="/shorts/"]),
 ytd-compact-video-renderer:has(a[href*="/shorts/"]),
+yt-lockup-view-model:has(a[href*="/shorts/"]),
+ytd-playlist-video-renderer:has(a[href*="/shorts/"]),
 ytm-shorts-lockup-view-model-v2,
-ytm-shorts-lockup-view-model {
+ytm-shorts-lockup-view-model,
+ytd-reel-item-renderer {
     display: none !important;
 }
 
-/* Hide individual Shorts links in grids */
+/* グリッド内に直接置かれたショートのリンクを非表示にする */
 a[href*="/shorts/"] {
     display: none !important;
 }
 
-/* Hide channel page Shorts tab using CSS attributes */
+/* チャンネルページのショートタブを属性で非表示にする */
 yt-tab-shape[tab-title*="ショート"],
 yt-tab-shape[tab-title*="Shorts" i],
 yt-tab-shape:has(a[href$="/shorts"]),
@@ -46,7 +52,7 @@ tp-yt-paper-tab:has(a[href$="/shorts"]) {
     visibility: hidden !important;
 }
 
-/* Hide sidebar links to Shorts (using modern :has selector) */
+/* サイドバーのショートリンクを :has で非表示にする */
 ytd-guide-entry-renderer:has(a[title*="ショート"]),
 ytd-guide-entry-renderer:has(a[title*="Shorts"]),
 ytd-mini-guide-entry-renderer:has(a[title*="ショート"]),
